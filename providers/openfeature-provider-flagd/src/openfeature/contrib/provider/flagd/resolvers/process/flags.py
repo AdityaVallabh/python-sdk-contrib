@@ -89,9 +89,11 @@ class Flag:
     ) -> tuple[str, typing.Any, ParseError]:
         if isinstance(variant_key, bool):
             variant_key = str(variant_key).lower()
-        
+
         error = None
         if variant_key not in self.variants:
-            error = ParseError(f"Resolved variant {variant_key} not in variants config.")
+            error = ParseError(
+                f"Resolved variant {variant_key} not in variants config."
+            )
 
         return variant_key, self.variants.get(variant_key), error

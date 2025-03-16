@@ -5,7 +5,7 @@ from openfeature.contrib.provider.flagd.resolvers.process.connector.file_watcher
 )
 from openfeature.evaluation_context import EvaluationContext
 from openfeature.event import ProviderEventDetails
-from openfeature.exception import FlagNotFoundError, ParseError, OpenFeatureError
+from openfeature.exception import FlagNotFoundError, OpenFeatureError, ParseError
 from openfeature.flag_evaluation import FlagResolutionDetails, Reason
 
 from ..config import Config
@@ -134,7 +134,9 @@ class InProcessResolver:
             reason=Reason.TARGETING_MATCH,
         )
 
-    def _resolve_default_with_error(self, default, error: OpenFeatureError) -> FlagResolutionDetails:
+    def _resolve_default_with_error(
+        self, default, error: OpenFeatureError
+    ) -> FlagResolutionDetails:
         return FlagResolutionDetails(
             default,
             reason=Reason.ERROR,
