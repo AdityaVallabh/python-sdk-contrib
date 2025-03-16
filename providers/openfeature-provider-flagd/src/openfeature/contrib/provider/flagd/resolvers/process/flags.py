@@ -81,16 +81,17 @@ class Flag:
             raise ParseError from err
 
     @property
-    def default(self) -> tuple[str, typing.Any]:
+    def default(self) -> tuple[str, typing.Any, ParseError]:
         return self.get_variant(self.default_variant)
 
     def get_variant(
         self, variant_key: typing.Union[str, bool]
-    ) -> tuple[str, typing.Any]:
+    ) -> tuple[str, typing.Any, ParseError]:
         if isinstance(variant_key, bool):
             variant_key = str(variant_key).lower()
-
+        
+        error = None
         if variant_key not in self.variants:
-            raise ParseError(f"Resolved variant {variant_key} not in variants config.")
+            error = ParseError(f"Resolved variant {variant_key} not in variants config.")
 
-        return variant_key, self.variants.get(variant_key)
+        return variant_key, self.variants.get(variant_key), error

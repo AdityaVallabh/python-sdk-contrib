@@ -88,16 +88,6 @@ def test_resolve_boolean_details_disabled_flag(flag, resolver):
     assert result.variant == None
     assert result.value == False
 
-def test_resolve_boolean_details_invalid_variant(resolver, flag):
-    flag.targeting = {
-        "var": ["targetingKey", "invalid_variant"]
-    }
-
-    resolver.flag_store.get_flag = Mock(return_value=flag)
-
-    with pytest.raises(ParseError):
-        resolver.resolve_boolean_details("flag", False)
-
 @pytest.mark.parametrize(
         "variants, targeting,"
         "context, method, default_value,"
@@ -148,10 +138,15 @@ def test_resolve_boolean_details_invalid_variant(resolver, flag):
             context("target_variant"), "resolve_object_details", {},
             "TARGETING_MATCH", "target_variant", None,
         ),
+        (
+            {"default_variant": 24}, {"var": ["targetingKey", "invalid_variant"]},
+            None, "resolve_integer_details", 42,
+            "ERROR", "default_variant", 42,
+        ),
     ],
     ids=[
         "static_flag",
-        "boolean_default_fallback",
+        "boolean_default_variant",
         "boolean_targeting_match",
         "string_targeting_match",
         "float_targeting_match",
@@ -159,6 +154,7 @@ def test_resolve_boolean_details_invalid_variant(resolver, flag):
         "integer_falsy_target",
         "object_falsy_target",
         "none_target_value",
+        "default_fallback_for_invalid_variant",
     ],
 )
 def test_resolver_details(

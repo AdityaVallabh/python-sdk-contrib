@@ -5,7 +5,7 @@ from openfeature.contrib.provider.flagd.resolvers.process.connector.file_watcher
 )
 from openfeature.evaluation_context import EvaluationContext
 from openfeature.event import ProviderEventDetails
-from openfeature.exception import FlagNotFoundError, ParseError
+from openfeature.exception import FlagNotFoundError, ParseError, OpenFeatureError
 from openfeature.flag_evaluation import FlagResolutionDetails, Reason
 
 from ..config import Config
@@ -107,23 +107,37 @@ class InProcessResolver:
             return FlagResolutionDetails(default_value, reason=Reason.DISABLED)
 
         if not flag.targeting:
-            variant, value = flag.default
+            variant, value, error = flag.default
+            if error:
+                return self._resolve_default_with_error(default_value, error)
             return FlagResolutionDetails(value, variant=variant, reason=Reason.STATIC)
 
         variant = targeting(flag.key, flag.targeting, evaluation_context)
 
         if variant is None:
-            variant, value = flag.default
+            variant, value, error = flag.default
+            if error:
+                return self._resolve_default_with_error(default_value, error)
             return FlagResolutionDetails(value, variant=variant, reason=Reason.DEFAULT)
         if not isinstance(variant, (str, bool)):
             raise ParseError(
                 "Parsed JSONLogic targeting did not return a string or bool"
             )
 
-        variant, value = flag.get_variant(variant)
+        variant, value, error = flag.get_variant(variant)
+        if error:
+            return self._resolve_default_with_error(default_value, error)
 
         return FlagResolutionDetails(
             value,
             variant=variant,
             reason=Reason.TARGETING_MATCH,
+        )
+
+    def _resolve_default_with_error(self, default, error: OpenFeatureError) -> FlagResolutionDetails:
+        return FlagResolutionDetails(
+            default,
+            reason=Reason.ERROR,
+            error_code=error.error_code,
+            error_message=error.error_message,
         )
